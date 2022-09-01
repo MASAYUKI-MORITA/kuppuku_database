@@ -3,11 +3,15 @@ import pandas as pd
 import streamlit as st
 import datetime
 
+# 声優ランキング表示の有無を決定するフラッグ
+flag_dict = {"period": True, "search": False}
+flag = flag_dict["period"]
+
+st.set_page_config(layout="wide")
 st.title("DLsite音声作品データベース")
 
 # チャート表示
-def show_chart(df):
-    st.line_chart(df, x="sales_date", y="downloads")
+# def show_plot(df):
 
 # データフレーム表示
 def show_df(text, df):
@@ -118,28 +122,37 @@ if st.sidebar.button("検索"):
 
     show_df("検索結果:", df)
     show_describe(df)
-else:
+
+    flag = flag_dict["search"]
+
+# 期間
+if flag:
+    period_slider = st.select_slider(
+        "Select a period of sales_date",
+        options=[30, 60, 90, 180, 365, 730, 1095]
+    )
+
     # デフォルトの表示内容
     def_df = df.sort_values("sales_date", ascending=False)
-    within30days = (datetime.datetime.now() - timedelta(days=30)).date()
-    def_df = def_df[def_df["sales_date"] >= within30days]
+    period = (datetime.datetime.now() - timedelta(days=period_slider)).date()
+    def_df = def_df[def_df["sales_date"] >= period]
     def_df = def_df.sort_values("downloads", ascending=False)
-    show_df("公開日が30日以内の作品", def_df)
+
+    top10 = def_df.groupby(["voice_actor"]).mean()
+    top10["size"] = def_df.groupby(["voice_actor"]).size()
+    top10["total"] = def_df.groupby(["voice_actor"])["downloads"].sum()
+    top10 = top10[top10["size"] >= period_slider // 30]
+    top10 = top10.sort_values("downloads", ascending=False)
+    top10 = top10.iloc[:10, :]
+    top10 = top10.sort_values("downloads", ascending=True)
+    top10["id"] = pd.RangeIndex(start=1, stop=len(top10.index) + 1, step=1)
+    top10 = top10.reindex(
+        ["id", "price", "downloads", "size", "total"],
+        axis=1
+    )
+
+    # show_plot(top10)
+    show_df(f"公開日:{period_slider:>4d}日以内\n声優別\"平均\"ダウンロード数（30日につき1作品以上の出演がある方のみ）", top10)
+
+    show_df(f"公開日:{period_slider:>4d}日以内", def_df)
     show_describe(def_df)
-    
-    sum_df = def_df.groupby(["voice_actor"]).sum().loc[:, "downloads"]
-    sum_df = sum_df.sort_values(ascending=False)
-    show_df("公開日が30日以内の作品の声優別\"累計\"ダウンロード数", sum_df)
-
-    mean_df = def_df.groupby(["voice_actor"]).mean().loc[:, "downloads"]
-    mean_df = mean_df.sort_values(ascending=False)
-    show_df("公開日が30日以内の作品の声優別\"平均\"ダウンロード数", mean_df)
-
-# ●声優別
-# x=公開日（月、半年、年）、y=ダウンロード数：折れ線
-# x=タグ、y=ダウンロード数：棒
-# x=タグ、y=ダウンロード数：棒（年別で色分け）
-# ●タグ別
-# x=公開日（月、半年、年）、y=ダウンロード数：折れ線
-# x=声優、y=ダウンロード数：棒
-# x=声優、y=ダウンロード数：棒（年別で色分け）
