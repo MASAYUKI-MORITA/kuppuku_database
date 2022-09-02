@@ -1,7 +1,10 @@
 from datetime import datetime as dt, timedelta
+import datetime
+import matplotlib
+matplotlib.use("Tkagg")
+import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
-import datetime
 
 # 声優ランキング表示の有無を決定するフラッグ
 flag_dict = {"period": True, "search": False}
@@ -10,8 +13,28 @@ flag = flag_dict["period"]
 st.set_page_config(layout="wide")
 st.title("DLsite音声作品データベース")
 
-# チャート表示
-# def show_plot(df):
+# グラフ表示
+def show_plot(df):
+    plt.style.use('seaborn-whitegrid')
+    plt.rcParams["font.family"] = "Yu Gothic"
+    
+    fig, ax1 = plt.subplots(figsize=(10, 5))
+
+    ax1.vlines(df["id"], ymin=0, ymax=df["downloads"], colors="red", alpha=0.4, linewidth=20)
+    ax1.set_ylim(ymin=0)
+    ax1.set_ylabel("平\n均\nダ\nウ\nン\nロ\nー\nド\n数", labelpad=15, size=15,rotation=0,va="center")
+    plt.xticks(df["id"], df.index, rotation=30, horizontalalignment="right")
+    plt.subplots_adjust(bottom=0.2)
+    ax1.invert_xaxis()
+
+    ax2 = ax1.twinx()
+    ax2.plot(df["id"], df["appearances"], linewidth=1, marker="o", color="blue", alpha=0.4)
+    ax2.set_ylim(ymin=0)
+    ax2.set_ylabel("作\n品\n出\n演\n数", labelpad=15, size=15,rotation=0,va="center")
+
+    plt.title("平均ダウンロード数     /     作品出演数", fontsize=20)
+    plt.grid(False)
+    plt.show()
 
 # データフレーム表示
 def show_df(text, df):
@@ -71,8 +94,10 @@ if tag_key:
     )
 
 # 公開日
-sales_date_key_from = st.sidebar.date_input("公開日", datetime.date(2000, 1, 1))
-sales_date_key_to = st.sidebar.date_input("～")
+limited_flag = st.sidebar.checkbox("期間指定")
+if limited_flag:
+    sales_date_key_from = st.sidebar.date_input("公開日", datetime.date(2000, 1, 1))
+    sales_date_key_to = st.sidebar.date_input("～")
 
 # 価格検索
 price_key = st.sidebar.number_input("価格", 0, step=1)
@@ -102,7 +127,8 @@ if st.sidebar.button("検索"):
     if tag_key:
         df = df[df["tag"].str.contains(tag_key)]
 
-    df = df[(df["sales_date"] >= sales_date_key_from) & (df["sales_date"] <= sales_date_key_to)]
+    if limited_flag:
+        df = df[(df["sales_date"] >= sales_date_key_from) & (df["sales_date"] <= sales_date_key_to)]
 
     if price_radio == "以上":
         df = df[df["price"] >= price_key]
@@ -120,7 +146,9 @@ if st.sidebar.button("検索"):
 
     df = df.sort_values(sort_dict[sort_key], ascending=da_dict[desc_or_asc])
 
-    show_df("検索結果:", df)
+    # if st.button("グラフを表示"):
+        # show_plot(df)
+    show_df("検索結果", df)
     show_describe(df)
 
     flag = flag_dict["search"]
@@ -128,7 +156,7 @@ if st.sidebar.button("検索"):
 # 期間
 if flag:
     period_slider = st.select_slider(
-        "Select a period of sales_date",
+        "平均ダウンロード数 / n日",
         options=[30, 60, 90, 180, 365, 730, 1095]
     )
 
@@ -139,20 +167,19 @@ if flag:
     def_df = def_df.sort_values("downloads", ascending=False)
 
     top10 = def_df.groupby(["voice_actor"]).mean()
-    top10["size"] = def_df.groupby(["voice_actor"]).size()
+    top10["appearances"] = def_df.groupby(["voice_actor"]).size()
     top10["total"] = def_df.groupby(["voice_actor"])["downloads"].sum()
-    top10 = top10[top10["size"] >= period_slider // 30]
+    top10 = top10[top10["appearances"] >= period_slider // 30]
     top10 = top10.sort_values("downloads", ascending=False)
     top10 = top10.iloc[:10, :]
-    top10 = top10.sort_values("downloads", ascending=True)
     top10["id"] = pd.RangeIndex(start=1, stop=len(top10.index) + 1, step=1)
     top10 = top10.reindex(
-        ["id", "price", "downloads", "size", "total"],
+        ["id", "price", "downloads", "appearances", "total"],
         axis=1
     )
 
-    # show_plot(top10)
-    show_df(f"公開日:{period_slider:>4d}日以内\n声優別\"平均\"ダウンロード数（30日につき1作品以上の出演がある方のみ）", top10)
-
-    show_df(f"公開日:{period_slider:>4d}日以内", def_df)
+    if st.button("グラフを表示"):
+        show_plot(top10)
+    show_df(f"公開日:{period_slider:>4d}日以内\n声優別平均ダウンロード数TOP10（出演頻度1作品/30日以上の方のみ抜粋）", top10)
+    show_df(f"公開日:{period_slider:>4d}日以内\n期間に公開された作品", def_df)
     show_describe(def_df)
