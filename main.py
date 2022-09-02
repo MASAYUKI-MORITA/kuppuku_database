@@ -5,6 +5,9 @@ import japanize_matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
+import seaborn as sns
+sns.set()
+sns.set(font="IPAexGothic")
 
 # 声優ランキング表示の有無を決定するフラッグ
 flag_dict = {"period": True, "search": False}
