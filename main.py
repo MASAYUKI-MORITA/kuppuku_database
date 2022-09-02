@@ -5,9 +5,6 @@ import matplotlib.pyplot as plt
 import japanize_matplotlib
 import pandas as pd
 import streamlit as st
-import matplotlib.font_manager
-
-st.write([f.name for f in matplotlib.font_manager.fontManager.ttflist])
 
 # 声優ランキング表示の有無を決定するフラッグ
 flag_dict = {"period": True, "search": False}
@@ -24,17 +21,17 @@ def show_plot(df):
 
     ax1.vlines(df["id"], ymin=0, ymax=df["downloads"], colors="red", alpha=0.4, linewidth=20)
     ax1.set_ylim(ymin=0)
-    ax1.set_ylabel("平\n均\nダ\nウ\nン\nロ\nー\nド\n数", labelpad=15, size=15, rotation=0, va="center", fontfamily="MS Gothic")
-    plt.xticks(df["id"], df.index, rotation=30, horizontalalignment="right", fontfamily="MS Gothic")
+    ax1.set_ylabel("平\n均\nダ\nウ\nン\nロ\nー\nド\n数", labelpad=15, size=15, rotation=0, va="center", fontfamily="IPAexGothic")
+    plt.xticks(df["id"], df.index, rotation=30, horizontalalignment="right", fontfamily="IPAexGothic")
     plt.subplots_adjust(bottom=0.2)
     ax1.invert_xaxis()
 
     ax2 = ax1.twinx()
     ax2.plot(df["id"], df["appearances"], linewidth=1, marker="o", color="blue", alpha=0.4)
     ax2.set_ylim(ymin=0)
-    ax2.set_ylabel("作\n品\n出\n演\n数", labelpad=15, size=15, rotation=0, va="center", fontfamily="MS Gothic")
+    ax2.set_ylabel("作\n品\n出\n演\n数", labelpad=15, size=15, rotation=0, va="center", fontfamily="IPAexGothic")
 
-    plt.title("平均ダウンロード数     /     作品出演数", fontsize=20, fontfamily="MS Gothic")
+    plt.title("平均ダウンロード数     /     作品出演数", fontsize=20, fontfamily="IPAexGothic")
     plt.grid(False)
     plt.savefig("mat.png")
 
