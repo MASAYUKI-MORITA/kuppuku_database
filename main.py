@@ -1,6 +1,7 @@
 from datetime import datetime as dt, timedelta
 from PIL import Image
 import datetime
+import japanize_matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
