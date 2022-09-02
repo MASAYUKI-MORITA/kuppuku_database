@@ -1,7 +1,7 @@
 from datetime import datetime as dt, timedelta
+from time import sleep
 import datetime
-import matplotlib
-matplotlib.use("Agg")
+from PIL import Image
 import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
@@ -34,7 +34,10 @@ def show_plot(df):
 
     plt.title("平均ダウンロード数     /     作品出演数", fontsize=20)
     plt.grid(False)
-    plt.show()
+    plt.savefig("mat.png")
+    
+    img = Image.open("mat.png")
+    img.show()
 
 # データフレーム表示
 def show_df(text, df):
