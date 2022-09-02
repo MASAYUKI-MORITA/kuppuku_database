@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 import japanize_matplotlib
 import pandas as pd
 import streamlit as st
+import matplotlib.font_manager
+
+st.write([f.name for f in matplotlib.font_manager.fontManager.ttflist])
 
 # 声優ランキング表示の有無を決定するフラッグ
 flag_dict = {"period": True, "search": False}
