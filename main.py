@@ -1,6 +1,7 @@
 from datetime import datetime as dt, timedelta
 import datetime
 import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
