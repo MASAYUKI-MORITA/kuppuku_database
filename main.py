@@ -19,7 +19,6 @@ st.title("DLsite音声作品データベース")
 # グラフ表示
 def show_plot(df):
     plt.style.use('seaborn-whitegrid')
-    plt.rcParams["font.family"] = "Yu Gothic"
     
     fig, ax1 = plt.subplots(figsize=(10, 5))
 
