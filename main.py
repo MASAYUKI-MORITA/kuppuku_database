@@ -1,187 +1,202 @@
 from datetime import datetime as dt, timedelta
-from PIL import Image
+import create
 import datetime
-import matplotlib.pyplot as plt
-import japanize_matplotlib
 import pandas as pd
+import show
 import streamlit as st
 
-# 声優ランキング表示の有無を決定するフラッグ
-flag_dict = {"period": True, "search": False}
-flag = flag_dict["period"]
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+# 変数
+# 最初に作成されるデータフレーム
+main_df = pd.DataFrame
+# サークルのデータフレーム
+circle_df = pd.DataFrame
+# 声優のデータフレーム
+va_df = pd.DataFrame
+# タグのデータフレーム
+tag_df = pd.DataFrame
+
+# csvファイルパス
+# 最初に作成されるデータフレーム
+main_path = "DLsite音声作品データ.csv"
+# サークルのデータフレーム
+circle_path = "circles.csv"
+# 声優のデータフレーム
+va_path = "voice_actors.csv"
+# タグのデータフレーム
+tag_path = "tags.csv"
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+# streamlitのレイアウトを整える
 st.set_page_config(layout="wide")
+
+# ページ内容
+# タイトル
 st.title("DLsite音声作品データベース")
 
-# グラフ表示
-def show_plot(df):
-    plt.style.use('seaborn-whitegrid')
-    
-    fig, ax1 = plt.subplots(figsize=(10, 5))
-
-    ax1.vlines(df["id"], ymin=0, ymax=df["downloads"], colors="red", alpha=0.4, linewidth=20)
-    ax1.set_ylim(ymin=0)
-    ax1.set_ylabel("平\n均\nダ\nウ\nン\nロ\nー\nド\n数", labelpad=15, size=15, rotation=0, va="center", fontfamily="IPAexGothic")
-    plt.xticks(df["id"], df.index, rotation=30, horizontalalignment="right", fontfamily="IPAexGothic")
-    plt.subplots_adjust(bottom=0.2)
-    ax1.invert_xaxis()
-
-    ax2 = ax1.twinx()
-    ax2.plot(df["id"], df["appearances"], linewidth=1, marker="o", color="blue", alpha=0.4)
-    ax2.set_ylim(ymin=0)
-    ax2.set_ylabel("作\n品\n出\n演\n数", labelpad=15, size=15, rotation=0, va="center", fontfamily="IPAexGothic")
-
-    plt.title("平均ダウンロード数     /     作品出演数", fontsize=20, fontfamily="IPAexGothic")
-    plt.grid(False)
-    plt.savefig("mat.png")
-
-    img = Image.open("mat.png")
-    st.image(img)
-
-# データフレーム表示
-def show_df(text, df):
-    st.subheader(text)
-    st.dataframe(df)
-
-# 概観表示
-def show_describe(df):
-    st.write(df.describe(datetime_is_numeric=True))
-
-# csvファイル読み込み
-file_path = "DLsite音声作品データ.csv"
-df = pd.read_csv(file_path)
-
-# データフレームを変形
-df = df.reindex(
-    ["title", "circle", "voice_actor", "tag", "sales_date", "price", "downloads"],
-    axis=1
-)
-df = df.fillna({"voice_actor": "不明", "tag": "なし", "sales_date": "2000-01-01", "downloads": 0})
-df["sales_date"] = pd.to_datetime(df["sales_date"]).dt.date
-df["price"] = df["price"].astype("int")
-df["downloads"] = df["downloads"].str.replace("^<li[\s\S]*", "0", regex=True)
-df["downloads"] = df["downloads"].astype("int")
-
-# 作品検索
+# サイドバー
+# 作品タイトル入力フォーム
 title_key = st.sidebar.text_input("作品名")
 
-# サークル検索
+# サークル入力フォーム
+# 検索時、サークルのデータフレームを表示
 circle_key = st.sidebar.text_input("サークル名")
-circle_file_path = "circles.csv"
-circle_df = pd.read_csv(circle_file_path)
 if circle_key:
-    st.sidebar.dataframe(
-        circle_df[circle_df["circle"].astype(str).str.contains(circle_key, case=False)],
-        height=160
-    )
+    circle_df = create.createSidebarDf(pd.read_csv(circle_path), circle_key, "circle")
+    if len(circle_df.index) > 0:
+        st.sidebar.dataframe(circle_df, height=160)
 
-# 声優検索
+# 声優入力フォーム
+# 検索時、声優のデータフレームを表示
 va_key = st.sidebar.text_input("声優名")
-va_file_path = "voice_actors.csv"
-va_df = pd.read_csv(va_file_path)
 if va_key:
-    st.sidebar.dataframe(
-        va_df[va_df["voice_actor"].astype(str).str.contains(va_key, case=False)],
-        height=160
-    )
+    va_df = create.createSidebarDf(pd.read_csv(va_path), va_key, "voice_actor")
+    if len(va_df.index) > 0:
+        st.sidebar.dataframe(va_df, height=160)
 
-# タグ検索
+# タグ入力フォーム
+# 検索時、タグのデータフレームを表示
 tag_key = st.sidebar.text_input("タグ")
-tag_file_path = "tags.csv"
-tag_df = pd.read_csv(tag_file_path)
 if tag_key:
-    st.sidebar.dataframe(
-        tag_df[tag_df["tag"].astype(str).str.contains(tag_key, case=False)],
-        height=160
-    )
+    tag_df = create.createSidebarDf(pd.read_csv(tag_path), tag_key, "tag")
+    if len(tag_df.index) > 0:
+        st.sidebar.dataframe(tag_df, height=160)
 
-# 公開日
+# 公開日入力フォーム
+# 2000年1月1日～今日
 limited_flag = st.sidebar.checkbox("期間指定")
 if limited_flag:
-    sales_date_key_from = st.sidebar.date_input("公開日", datetime.date(2000, 1, 1))
+    sales_date_key_from = st.sidebar.date_input("公開日", datetime.date(2000, 1, 1), max_value=(datetime.date.today()))
     sales_date_key_to = st.sidebar.date_input("～")
 
-# 価格検索
+# 価格入力フォーム
+# 以上or以下or一致ラジオボタン
 price_key = st.sidebar.number_input("価格", 0, step=1)
 price_radio = st.sidebar.radio("", ("以上", "以下", "一致"), horizontal=True)
 
-# ダウンロード数検索
+# ダウンロード数入力フォーム
+# 以上or以下ラジオボタン
 downloads_key = st.sidebar.number_input("ダウンロード数", 0, step=1)
 downloads_radio = st.sidebar.radio("", ("以上", "以下"), horizontal=True)
 
 # 並び順
+# 価格or公開日orダウンロード数ラジオボタン
+# 昇順or降順ラジオボタン
 sort_key = st.sidebar.radio("並び順", ("価格", "公開日", "ダウンロード数"), 2, horizontal=True)
 sort_dict = {"価格": "price", "公開日": "sales_date", "ダウンロード数": "downloads"}
 desc_or_asc = st.sidebar.radio("降順or昇順", ("降順", "昇順"), horizontal=True)
 da_dict = {"降順": False, "昇順": True}
 
 # 検索ボタン
-if st.sidebar.button("検索"):
+search_btn = st.sidebar.button("検索")
+
+# 検索ボタン下に空白を用意（スマホだと検索ボタンが押しづらいため）
+st.sidebar.title("")
+st.sidebar.title("")
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+# 最初のデータフレームを生成
+main_df = create.createMainDf(pd.read_csv(main_path))
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+# 検索実行
+if search_btn:
+    # 作品タイトル
     if title_key:
-        df = df[df["title"].str.contains(title_key)]
+        main_df = main_df[main_df["title"].str.contains(title_key)]
+    # タイトルの検索フォームに何かが入力されている場合、フラッグをTrueに
+    title_flag = title_key != ""
 
+    # サークル
     if circle_key:
-        df = df[df["circle"].str.contains(circle_key)]
+        main_df = main_df[main_df["circle"].str.contains(circle_key)]
+    # サークルの検索結果がユニークな場合、フラッグをTrueに
+    circle_flag = circle_key and circle_df["circle"].str.contains(circle_key).sum() == 1
 
+    # 声優
     if va_key:
-        df = df[df["voice_actor"].str.contains(va_key)]
+        main_df = main_df[main_df["voice_actor"].str.contains(va_key)]
+    # 声優の検索結果がユニークな場合、フラッグをTrueに
+    va_flag = va_key and va_df["voice_actor"].str.contains(va_key).sum() == 1
 
+    # タグ
     if tag_key:
-        df = df[df["tag"].str.contains(tag_key)]
+        main_df = main_df[main_df["tag"].str.contains(tag_key)]
+    # タグの検索結果がユニークな場合、フラッグをTrueに
+    tag_flag = tag_key and tag_df["tag"].str.contains(tag_key).sum() == 1
 
+    # 公開日
     if limited_flag:
-        df = df[(df["sales_date"] >= sales_date_key_from) & (df["sales_date"] <= sales_date_key_to)]
+        main_df = main_df[(main_df["sales_date"] >= sales_date_key_from) & (main_df["sales_date"] <= sales_date_key_to)]
 
+    # 価格
     if price_radio == "以上":
-        df = df[df["price"] >= price_key]
+        main_df = main_df[main_df["price"] >= price_key]
     elif price_radio == "以下":
-        df = df[df["price"] <= price_key]
+        main_df = main_df[main_df["price"] <= price_key]
     else:
-        df = df[df["price"] == price_key]
+        main_df = main_df[main_df["price"] == price_key]
 
+    # ダウンロード数
     if downloads_radio == "以上":
-        df = df[df["downloads"] >= downloads_key]
+        main_df = main_df[main_df["downloads"] >= downloads_key]
     elif downloads_radio == "以下":
-        df = df[df["downloads"] <= downloads_key]
+        main_df = main_df[main_df["downloads"] <= downloads_key]
     else:
-        df = df[df["downloads"] == downloads_key]
+        main_df = main_df[main_df["downloads"] == downloads_key]
 
-    df = df.sort_values(sort_dict[sort_key], ascending=da_dict[desc_or_asc])
+    # 並び順
+    main_df = main_df.sort_values(sort_dict[sort_key], ascending=da_dict[desc_or_asc])
 
-    # if st.button("グラフを表示"):
-        # show_plot(df)
-    show_df("検索結果", df)
-    show_describe(df)
+    # 三種のフラグのいずれかがTrueな場合、「月ごとの平均ダウンロード数と作品数の推移」を表示
+    if title_flag or circle_flag or va_flag or tag_flag:
+        # 「月ごとの平均ダウンロード数と作品数の推移」を作成
+        search_results_df = create.createSearchResultsDf(main_df)
 
-    flag = flag_dict["search"]
+        # 検索結果がユニークなものは、キーをデータフレームから参照
+        if circle_flag:
+            circle_key = circle_df[circle_df["circle"].str.contains(circle_key)].loc[:, "circle"].iloc[-1]
+        if va_flag:
+            va_key = va_df[va_df["voice_actor"].str.contains(va_key)].loc[:, "voice_actor"].iloc[-1]
+        if tag_flag:
+            tag_key = tag_df[tag_df["tag"].str.contains(tag_key)].loc[:, "tag"].iloc[-1]
+        # グラフを表示
+        # 引数に検索フォームの内容を設置
+        show.showSearchResultsPlot(search_results_df, title=title_key, circle=circle_key, va=va_key, tag=tag_key)
+        # データフレームを表示
+        show.showDf("月ごとの平均ダウンロード数と作品数の推移", search_results_df)
 
-# 期間
-if flag:
+    # 検索結果をデータフレームで表示
+    show.showDf("検索結果", main_df)
+    # 検索結果の概観を表示
+    show.showDescribe(main_df)
+
+# 何も検索していない場合に表示される、初期のグラフとデータフレーム
+else:
+    # 作品公開日の期間を指定するスライダー
     period_slider = st.select_slider(
         "平均ダウンロード数 / n日",
         options=[30, 60, 90, 180, 365, 730, 1095]
     )
 
-    # デフォルトの表示内容
-    def_df = df.sort_values("sales_date", ascending=False)
+    # スライダーで指定された期間にデータフレームを絞る
     period = (datetime.datetime.now() - timedelta(days=period_slider)).date()
-    def_df = def_df[def_df["sales_date"] >= period]
-    def_df = def_df.sort_values("downloads", ascending=False)
+    main_df = main_df[main_df["sales_date"] >= period]
+    # ダウンロード数順に並び替え
+    main_df = main_df.sort_values("downloads", ascending=False)
 
-    top10 = def_df.groupby(["voice_actor"]).mean()
-    top10["appearances"] = def_df.groupby(["voice_actor"]).size()
-    top10["total"] = def_df.groupby(["voice_actor"])["downloads"].sum()
-    top10 = top10[top10["appearances"] >= period_slider // 30]
-    top10 = top10.sort_values("downloads", ascending=False)
-    top10 = top10.iloc[:10, :]
-    top10["id"] = pd.RangeIndex(start=1, stop=len(top10.index) + 1, step=1)
-    top10 = top10.reindex(
-        ["id", "price", "downloads", "appearances", "total"],
-        axis=1
-    )
+    # 「声優別平均ダウンロード数TOP20」を作成
+    top20 = create.createInitialDf(main_df, ps=period_slider)
 
-    if st.button("グラフを表示"):
-        show_plot(top10)
-    show_df(f"公開日:{period_slider:>4d}日以内\n声優別平均ダウンロード数TOP10（出演頻度1作品/30日以上の方のみ抜粋）", top10)
-    show_df(f"公開日:{period_slider:>4d}日以内\n期間に公開された作品", def_df)
-    show_describe(def_df)
+    # グラフを表示（TOP20）
+    show.showInitialPlot(top20, ps=period_slider)
+    # データフレームを表示（TOP20）
+    show.showDf(f"公開日: {period_slider} 日以内\n声優別平均ダウンロード数TOP20（出演頻度1作品/30日以上の方のみ抜粋）", top20)
+    # グラフを表示（期間内に公開された全作品）
+    show.showDf(f"公開日: {period_slider} 日以内\n期間内に公開された作品", main_df)
+    # 概観を表示
+    show.showDescribe(main_df)
