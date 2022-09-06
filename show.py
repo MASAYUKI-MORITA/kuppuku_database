@@ -7,10 +7,9 @@ import streamlit as st
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 # カラムをリネームする
-def renameDf(df):
+def renameColumn(df):
     # カラム名
     column_names = {
-        "id": "id",
         "title": "作品タイトル",
         "circle": "サークル",
         "voice_actor": "声優",
@@ -31,6 +30,26 @@ def renameDf(df):
     
     return df
 
+# 概観のインデックスをリネーム
+def renameIndex(df):
+    # インデックス名
+    index_names = {
+        "count": "作品数",
+        "mean": "平均",
+        "std": "標準偏差",
+        "min": "最小値",
+        "25%": "1/4分位数",
+        "50%": "中央値",
+        "75%": "3/4分位数",
+        "max": "最大値"
+    }
+
+    df = pd.DataFrame(df)
+    for i in df.index:
+        df = df.rename(index={i: index_names[i]})
+    
+    return df
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 # データフレーム表示
@@ -40,14 +59,14 @@ def showDf(text, df):
     # カラム名を編集する前にコピー
     renamed_df = df.copy()
     # データフレームを表示
-    st.dataframe(renameDf(renamed_df))
+    st.dataframe(renameColumn(renamed_df))
 
 # 概観表示
 def showDescribe(df):
     # カラム名を編集する前にコピー
     renamed_df = df.copy()
     # 概観を表示
-    st.dataframe(renameDf(renamed_df).describe())
+    st.dataframe(renameIndex(renameColumn(renamed_df).describe()))
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
@@ -57,20 +76,20 @@ def showInitialPlot(df, ps=30):
     fig, ax1 = plt.subplots(figsize=(16, 9))
     # 一つ目を棒グラフに設定
     # 「mean_downloads」カラムを反映
-    ax1.vlines(df["id"], ymin=0, ymax=df["mean_downloads"], colors="red", alpha=0.4, linewidth=25)
+    ax1.vlines(df.index, ymin=0, ymax=df["mean_downloads"], colors="red", alpha=0.4, linewidth=25)
     # 一つ目のy軸にラベルを表示
     ax1.set_ylabel("平\n均\nダ\nウ\nン\nロ\nー\nド\n数", labelpad=15, size=17, rotation=0, va="center", fontfamily="IPAexGothic")
     # y軸の最低値を0に固定
     ax1.set_ylim(ymin=0)
     # x軸に「index」を表示
-    plt.xticks(df["id"], df.index, rotation=30, horizontalalignment="right", fontfamily="IPAexGothic")
+    plt.xticks(df.index, df["voice_actor"], rotation=30, horizontalalignment="right", fontfamily="IPAexGothic")
     # グラフの位置を調整
     plt.subplots_adjust(left=0.1, bottom=0.2, right=0.9, top=0.9)
     # 二つ目のグラフを作成
     ax2 = ax1.twinx()
     # 二つ目を折れ線グラフに設定
     # 出演作品数「appearances」カラムを反映
-    ax2.plot(df["id"], df["appearances"], linewidth=1, marker="o", color="blue", alpha=0.6)
+    ax2.plot(df.index, df["appearances"], linewidth=1, marker="o", color="blue", alpha=0.6)
     # 二つ目のy軸にラベルを表示
     ax2.set_ylabel("出\n演\n作\n品\n数", labelpad=15, size=20, rotation=0, va="center", fontfamily="IPAexGothic")
     # y軸の最低値を0に固定
@@ -97,21 +116,21 @@ def showSearchResultsPlot(df, title="", circle="", va="", tag=""):
     # 一つ目を折れ線グラフに設定
     # 折れ線の下を塗りつぶし
     # 「mean_downloads」カラムを反映
-    ax1.fill_between(df["id"], df["mean_downloads"], color="red", alpha=0.3)
-    ax1.plot(df["id"], df["mean_downloads"], color="red", alpha=0.4)
+    ax1.fill_between(df.index, df["mean_downloads"], color="red", alpha=0.3)
+    ax1.plot(df.index, df["mean_downloads"], color="red", alpha=0.4)
     # 一つ目のy軸にラベルを表示
     ax1.set_ylabel("平\n均\nダ\nウ\nン\nロ\nー\nド\n数", labelpad=15, size=20, rotation=0, va="center", fontfamily="IPAexGothic")
     # y軸の最低値を0に固定
     ax1.set_ylim(ymin=0)
     # x軸に「index」を表示
-    plt.xticks(df["id"], df["sales_date"], rotation=30, horizontalalignment="right", fontfamily="IPAexGothic")
+    plt.xticks(df.index, df["sales_date"], rotation=30, horizontalalignment="right", fontfamily="IPAexGothic")
     # グラフの位置を調整
     plt.subplots_adjust(left=0.1, bottom=0.2, right=0.9, top=0.9)
     # 二つ目のグラフを作成
     ax2 = ax1.twinx()
     # 二つ目を折れ線グラフに設定
     # 作品数「size」カラムを反映
-    ax2.plot(df["id"], df["size"], linewidth=1, color="blue", alpha=0.6)
+    ax2.plot(df.index, df["size"], linewidth=1, color="blue", alpha=0.6)
     # 二つ目のy軸にラベルを表示
     ax2.set_ylabel("作\n品\n数", labelpad=15, size=20, rotation=0, va="center", fontfamily="IPAexGothic")
     # y軸の最低値を0に固定

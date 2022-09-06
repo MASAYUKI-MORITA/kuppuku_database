@@ -152,9 +152,9 @@ if search_btn:
     # 並び順
     main_df = main_df.sort_values(sort_dict[sort_key], ascending=da_dict[desc_or_asc])
 
-    # 三種のフラグのいずれかがTrueな場合、「月ごとの平均ダウンロード数と作品数の推移」を表示
+    # 三種のフラグのいずれかがTrueな場合、「平均ダウンロード数と作品数の推移」を表示
     if title_flag or circle_flag or va_flag or tag_flag:
-        # 「月ごとの平均ダウンロード数と作品数の推移」を作成
+        # 「平均ダウンロード数と作品数の推移」を作成
         search_results_df = create.createSearchResultsDf(main_df)
 
         # 検索結果がユニークなものは、キーをデータフレームから参照
@@ -168,7 +168,7 @@ if search_btn:
         # 引数に検索フォームの内容を設置
         show.showSearchResultsPlot(search_results_df, title=title_key, circle=circle_key, va=va_key, tag=tag_key)
         # データフレームを表示
-        show.showDf("月ごとの平均ダウンロード数と作品数の推移", search_results_df)
+        show.showDf("平均ダウンロード数と作品数の推移", search_results_df)
 
     # 検索結果をデータフレームで表示
     show.showDf("検索結果", main_df)
@@ -197,6 +197,6 @@ else:
     # データフレームを表示（TOP20）
     show.showDf(f"公開日: {period_slider} 日以内\n声優別平均ダウンロード数TOP20（出演頻度1作品/30日以上の方のみ抜粋）", top20)
     # グラフを表示（期間内に公開された全作品）
-    show.showDf(f"公開日: {period_slider} 日以内\n期間内に公開された作品", main_df)
+    show.showDf("期間内に公開された作品", main_df)
     # 概観を表示
     show.showDescribe(main_df)

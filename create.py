@@ -62,11 +62,13 @@ def createInitialDf(df, ps=30):
         result = result.iloc[:20, :]
     # 「total」を基準に降順へ並び替え
     result = result.sort_values("total", ascending=False)
-    # 「id」カラムにて連番を割り振る
-    result["id"] = pd.RangeIndex(start=1, stop=len(result.index) + 1, step=1)
+    # 「sales_date」をカラムに戻すため、indexを新規作成
+    result.reset_index(inplace=True)
+    # 「index」としてカラムに戻った「voice_actor」のカラム名を元に戻す
+    result = result.rename(columns={"index": "voice_actor"})
     # カラムを並び替え
     result = result.reindex(
-        ["id", "price", "mean_downloads", "appearances", "total"],
+        ["voice_actor", "price", "mean_downloads", "appearances", "total"],
         axis=1
     )
 
@@ -92,20 +94,22 @@ def createSearchResultsDf(df):
     })
     # 「downloads」カラムを「mean_downloads」（平均ダウンロード数）カラムに名称変更
     result = pd.DataFrame(result).rename(columns={"downloads": "mean_downloads"})
-    # 「sales_date」をカラムに戻すため、indexを新規作成
-    result = result.reset_index()
+    # 「sales_date」をカラムに戻すため、「index」を振り直し
+    result.reset_index(inplace=True)
+    # 「index」としてカラムに戻った「sales_date」のカラム名を元に戻す
+    result = pd.DataFrame(result).rename(columns={"index": "sales_date"})
     # 「sales_date」カラムを「datetime型」に変換し、「YYYY-mm」形式で表示
     result["sales_date"] = pd.to_datetime(result["sales_date"]).dt.strftime("%Y-%m")
     # 「sales_date」を基準に降順に並び替え
     result = result.sort_values("sales_date", ascending=False)
-    # 「id」カラムにて連番を割り振る
-    result["id"] = pd.RangeIndex(start=1, stop=len(result.index) + 1, step=1)
     # 空のセルに「0」を埋める
     result = result.fillna(0)
     # カラムを並び替え
     result = result.reindex(
-        ["id", "sales_date", "mean_downloads", "size", "total"],
+        ["sales_date", "mean_downloads", "size", "total"],
         axis=1
     )
+    # 「index」を振り直し
+    result = result.reset_index(drop=True)
 
     return result
