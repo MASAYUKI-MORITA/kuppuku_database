@@ -1,7 +1,35 @@
 from PIL import Image
 import matplotlib.pyplot as plt
 import japanize_matplotlib
+import pandas as pd
 import streamlit as st
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+# カラムをリネームする
+def renameDf(df):
+    # カラム名
+    column_names = {
+        "id": "id",
+        "title": "作品タイトル",
+        "circle": "サークル",
+        "voice_actor": "声優",
+        "price": "価格",
+        "tag": "タグ",
+        "sales_date": "公開日",
+        "downloads": "ダウンロード数",
+        "size": "作品数",
+        "appearances": "出演作品数",
+        "mean_price": "平均価格",
+        "mean_downloads": "平均ダウンロード数",
+        "total": "累計ダウンロード数"
+    }
+
+    df = pd.DataFrame(df)
+    for column_name in df:
+        df = df.rename(columns={column_name: column_names[column_name]})
+    
+    return df
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
@@ -9,13 +37,17 @@ import streamlit as st
 def showDf(text, df):
     # サブヘッダーを表示
     st.subheader(text)
+    # カラム名を編集する前にコピー
+    renamed_df = df.copy()
     # データフレームを表示
-    st.dataframe(df)
+    st.dataframe(renameDf(renamed_df))
 
 # 概観表示
 def showDescribe(df):
+    # カラム名を編集する前にコピー
+    renamed_df = df.copy()
     # 概観を表示
-    st.dataframe(df.describe())
+    st.dataframe(renameDf(renamed_df).describe())
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
