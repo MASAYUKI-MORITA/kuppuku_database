@@ -148,6 +148,7 @@ if search_btn:
             va_key = va_df[va_df["voice_actor"].isin([va_key])].loc[:, "voice_actor"].iloc[-1]
             # キーワードに完全一致した声優を含む行を残し、
             # キーワードに部分一致しているその他の声優を含む行を削除する
+            main_df = main_df[main_df["voice_actor"].str.contains(va_key)]
             alt_df = va_df.copy()
             alt_df = alt_df[~alt_df["voice_actor"].isin([va_key])]
             for row in alt_df.iterrows():
@@ -170,6 +171,7 @@ if search_btn:
             tag_key = tag_df[tag_df["tag"].isin([tag_key])].loc[:, "tag"].iloc[-1]
             # キーワードに完全一致したタグを含む行を残し、
             # キーワードに部分一致しているその他のタグを含む行を削除する
+            main_df = main_df[main_df["tag"].str.contains(tag_key)]
             alt_df = tag_df.copy()
             alt_df = alt_df[~alt_df["tag"].isin([tag_key])]
             for row in alt_df.iterrows():
