@@ -6,7 +6,7 @@ import streamlit as st
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-# カラムをリネームする
+# カラムをリネーム
 def renameColumn(df):
     # カラム名
     column_names = {
@@ -78,11 +78,13 @@ def showInitialPlot(df, ps=30):
     # 「mean_downloads」カラムを反映
     ax1.vlines(df.index, ymin=0, ymax=df["mean_downloads"], colors="red", alpha=0.4, linewidth=25)
     # 一つ目のy軸にラベルを表示
-    ax1.set_ylabel("平\n均\nダ\nウ\nン\nロ\nー\nド\n数", labelpad=15, size=17, rotation=0, va="center", fontfamily="IPAexGothic")
+    ax1.set_ylabel("平\n均\nダ\nウ\nン\nロ\nー\nド\n数", labelpad=15, size=20, rotation=0, va="center", fontfamily="IPAexGothic")
     # y軸の最低値を0に固定
     ax1.set_ylim(ymin=0)
     # x軸に「index」を表示
-    plt.xticks(df.index, df["voice_actor"], rotation=30, horizontalalignment="right", fontfamily="IPAexGothic")
+    plt.xticks(df.index, df["voice_actor"], rotation=30, horizontalalignment="right", fontsize=13, fontfamily="IPAexGothic")
+    # y軸の目盛りのフォントサイズを設定
+    plt.yticks(fontsize=13)
     # グラフの位置を調整
     plt.subplots_adjust(left=0.1, bottom=0.2, right=0.9, top=0.9)
     # 二つ目のグラフを作成
@@ -94,6 +96,8 @@ def showInitialPlot(df, ps=30):
     ax2.set_ylabel("出\n演\n作\n品\n数", labelpad=15, size=20, rotation=0, va="center", fontfamily="IPAexGothic")
     # y軸の最低値を0に固定
     ax2.set_ylim(ymin=0)
+    # y軸の目盛りのフォントサイズを設定
+    plt.yticks(fontsize=13)
     # グラフの左上にメインタイトルを表示
     plt.title("声優別平均ダウンロード数TOP20", loc="left", fontsize=30, fontfamily="IPAexGothic")
     # グラフの右上に指定した期間を表示
@@ -123,7 +127,9 @@ def showSearchResultsPlot(df, title="", circle="", va="", tag=""):
     # y軸の最低値を0に固定
     ax1.set_ylim(ymin=0)
     # x軸に「index」を表示
-    plt.xticks(df.index, df["sales_date"], rotation=30, horizontalalignment="right", fontfamily="IPAexGothic")
+    plt.xticks(df.index, df["sales_date"], rotation=30, horizontalalignment="right", fontsize=13, fontfamily="IPAexGothic")
+    # y軸の目盛りのフォントサイズを設定
+    plt.yticks(fontsize=13)
     # グラフの位置を調整
     plt.subplots_adjust(left=0.1, bottom=0.2, right=0.9, top=0.9)
     # 二つ目のグラフを作成
@@ -135,6 +141,8 @@ def showSearchResultsPlot(df, title="", circle="", va="", tag=""):
     ax2.set_ylabel("作\n品\n数", labelpad=15, size=20, rotation=0, va="center", fontfamily="IPAexGothic")
     # y軸の最低値を0に固定
     ax2.set_ylim(ymin=0)
+    # y軸の目盛りのフォントサイズを設定
+    plt.yticks(fontsize=13)
     # グラフの左上にメインタイトルを表示
     plt.title("平均ダウンロード数と作品数の推移", loc="left", pad=10, fontsize=30, fontfamily="IPAexGothic")
     # 12か月以上のデータがある場合、x軸の目盛り表示を減らす

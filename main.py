@@ -152,7 +152,7 @@ if search_btn:
     # 並び順
     main_df = main_df.sort_values(sort_dict[sort_key], ascending=da_dict[desc_or_asc])
 
-    # 三種のフラグのいずれかがTrueな場合、「平均ダウンロード数と作品数の推移」を表示
+    # 四種のフラグのいずれかがTrueな場合、「平均ダウンロード数と作品数の推移」を表示
     if title_flag or circle_flag or va_flag or tag_flag:
         # 「平均ダウンロード数と作品数の推移」を作成
         search_results_df = create.createSearchResultsDf(main_df)
@@ -182,12 +182,6 @@ else:
         "平均ダウンロード数 / n日",
         options=[30, 60, 90, 180, 365, 730, 1095]
     )
-
-    # スライダーで指定された期間にデータフレームを絞る
-    period = (datetime.datetime.now() - timedelta(days=period_slider)).date()
-    main_df = main_df[main_df["sales_date"] >= period]
-    # ダウンロード数順に並び替え
-    main_df = main_df.sort_values("downloads", ascending=False)
 
     # 「声優別平均ダウンロード数TOP20」を作成
     top20 = create.createInitialDf(main_df, ps=period_slider)

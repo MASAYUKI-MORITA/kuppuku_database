@@ -1,3 +1,5 @@
+from datetime import datetime as dt, timedelta
+import datetime
 import pandas as pd
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -44,6 +46,12 @@ def createSidebarDf(df, key, column):
 def createInitialDf(df, ps=30):
     # データフレームを編集する前にコピー
     result = df.copy()
+    # スライダーで指定された期間にデータフレームを絞る
+    period = (datetime.datetime.now() - timedelta(days=ps)).date()
+    result = result[result["sales_date"] >= period]
+    # ダウンロード数順に並び替え
+    result = result.sort_values("downloads", ascending=False)
+    # データフレームをグループ化する前にコピー
     alt_df = result.copy()
     # 「voice_actor」基準でグループ化
     result = result.groupby(["voice_actor"]).mean()
