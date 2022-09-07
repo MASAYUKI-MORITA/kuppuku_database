@@ -1,5 +1,3 @@
-from datetime import datetime as dt, timedelta
-import datetime
 import pandas as pd
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -46,17 +44,15 @@ def createSidebarDf(df, key, column):
 def createInitialDf(df, ps=30):
     # データフレームを編集する前にコピー
     result = df.copy()
-    # スライダーで指定された期間にデータフレームを絞る
-    period = (datetime.datetime.now() - timedelta(days=ps)).date()
-    result = result[result["sales_date"] >= period]
-    # ダウンロード数順に並び替え
-    result = result.sort_values("downloads", ascending=False)
     # データフレームをグループ化する前にコピー
     alt_df = result.copy()
     # 「voice_actor」基準でグループ化
     result = result.groupby(["voice_actor"]).mean()
     # 「downloads」カラムを「mean_downloads」（平均ダウンロード数）カラムに名称変更
-    result = pd.DataFrame(result).rename(columns={"downloads": "mean_downloads"})
+    result = pd.DataFrame(result)
+    result = result.rename(columns={"downloads": "mean_downloads"})
+    # 「price」カラムを「mean_price」（平均価格）カラムに名称変更
+    result = result.rename(columns={"price": "mean_price"})
     # 「voice_actor」ごとに出演作品数を「appearances」カラムに格納
     result["appearances"] = alt_df.groupby(["voice_actor"]).size()
     # 「voice_actor」ごとに「downloads」の合計を「total」カラムに格納
@@ -76,7 +72,7 @@ def createInitialDf(df, ps=30):
     result = result.rename(columns={"index": "voice_actor"})
     # カラムを並び替え
     result = result.reindex(
-        ["voice_actor", "price", "mean_downloads", "appearances", "total"],
+        ["voice_actor", "mean_price", "mean_downloads", "appearances", "total"],
         axis=1
     )
 

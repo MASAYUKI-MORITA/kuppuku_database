@@ -38,23 +38,23 @@ st.title("DLsite音声作品データベース")
 
 # サイドバー
 # 作品タイトル入力フォーム
-title_key = st.sidebar.text_input("作品名")
+title_key = st.sidebar.text_input("作品タイトル")
 
 # サークル入力フォーム
 # 検索時、サークルのデータフレームを表示
-circle_key = st.sidebar.text_input("サークル名")
+circle_key = st.sidebar.text_input("サークル")
 if circle_key:
     circle_df = create.createSidebarDf(pd.read_csv(circle_path), circle_key, "circle")
     if len(circle_df.index) > 0:
-        st.sidebar.dataframe(circle_df, height=160)
+        st.sidebar.dataframe(show.renameColumn(circle_df), height=160)
 
 # 声優入力フォーム
 # 検索時、声優のデータフレームを表示
-va_key = st.sidebar.text_input("声優名")
+va_key = st.sidebar.text_input("声優")
 if va_key:
     va_df = create.createSidebarDf(pd.read_csv(va_path), va_key, "voice_actor")
     if len(va_df.index) > 0:
-        st.sidebar.dataframe(va_df, height=160)
+        st.sidebar.dataframe(show.renameColumn(va_df), height=160)
 
 # タグ入力フォーム
 # 検索時、タグのデータフレームを表示
@@ -62,7 +62,7 @@ tag_key = st.sidebar.text_input("タグ")
 if tag_key:
     tag_df = create.createSidebarDf(pd.read_csv(tag_path), tag_key, "tag")
     if len(tag_df.index) > 0:
-        st.sidebar.dataframe(tag_df, height=160)
+        st.sidebar.dataframe(show.renameColumn(tag_df), height=160)
 
 # 公開日入力フォーム
 # 2000年1月1日～今日
@@ -106,28 +106,79 @@ main_df = create.createMainDf(pd.read_csv(main_path))
 # 検索実行
 if search_btn:
     # 作品タイトル
+    title_flag = False
     if title_key:
+        # タイトルの検索フォームに何かが入力されている場合、「title_flag」を「True」に
+        title_flag = title_key != ""
         main_df = main_df[main_df["title"].str.contains(title_key)]
-    # タイトルの検索フォームに何かが入力されている場合、フラッグをTrueに
-    title_flag = title_key != ""
+    
 
     # サークル
+    # ・サークルのデータフレームにキーワードと完全一致したものがある
+    # ・キーワード検索の結果がユニークである
+    # 上記の場合、「circle_flag」を「True」に
+    # また、キーワードを一意に定める（完全一致の方を優先）
+    circle_flag = False
     if circle_key:
+        if circle_df["circle"].isin([circle_key]).sum() == 1:
+            circle_flag = True
+            circle_key = circle_df[circle_df["circle"].isin([circle_key])].loc[:, "circle"].iloc[-1]
+            # キーワードに完全一致したサークルを含む行を残し、
+            # キーワードに部分一致しているその他のサークルを含む行を削除する
+            main_df = main_df[main_df["circle"].str.contains(circle_key)]
+            alt_df = circle_df.copy()
+            alt_df = alt_df[~alt_df["circle"].isin([circle_key])]
+            for row in alt_df.iterrows():
+                main_df = main_df[~main_df["circle"].str.contains(row[1].iloc[-1])]
+        elif circle_df["circle"].str.contains(circle_key).sum() == 1:
+            circle_flag = True
+            circle_key = circle_df[circle_df["circle"].str.contains(circle_key)].loc[:, "circle"].iloc[-1]
+            main_df = main_df[main_df["circle"].str.contains(circle_key)]
         main_df = main_df[main_df["circle"].str.contains(circle_key)]
-    # サークルの検索結果がユニークな場合、フラッグをTrueに
-    circle_flag = circle_key and circle_df["circle"].str.contains(circle_key).sum() == 1
 
     # 声優
+    # ・サークルのデータフレームにキーワードと完全一致したものがある
+    # ・キーワード検索の結果がユニークである
+    # 上記の場合、「va_flag」を「True」に
+    # また、キーワードを一意に定める（完全一致の方を優先）
+    va_flag = False
     if va_key:
+        if va_df["voice_actor"].isin([va_key]).sum() == 1:
+            va_flag = True
+            va_key = va_df[va_df["voice_actor"].isin([va_key])].loc[:, "voice_actor"].iloc[-1]
+            # キーワードに完全一致した声優を含む行を残し、
+            # キーワードに部分一致しているその他の声優を含む行を削除する
+            alt_df = va_df.copy()
+            alt_df = alt_df[~alt_df["voice_actor"].isin([va_key])]
+            for row in alt_df.iterrows():
+                main_df = main_df[~main_df["voice_actor"].str.contains(row[1].iloc[-1])]
+        elif va_df["voice_actor"].str.contains(va_key).sum() == 1:
+            va_flag = True
+            va_key = va_df[va_df["voice_actor"].str.contains(va_key)].loc[:, "voice_actor"].iloc[-1]
+            main_df = main_df[main_df["voice_actor"].str.contains(va_key)]
         main_df = main_df[main_df["voice_actor"].str.contains(va_key)]
-    # 声優の検索結果がユニークな場合、フラッグをTrueに
-    va_flag = va_key and va_df["voice_actor"].str.contains(va_key).sum() == 1
 
     # タグ
+    # ・サークルのデータフレームにキーワードと完全一致したものがある
+    # ・キーワード検索の結果がユニークである
+    # 上記の場合、「tag_flag」を「True」に
+    # また、キーワードを一意に定める（完全一致の方を優先）
+    tag_flag = False
     if tag_key:
+        if tag_df["tag"].isin([tag_key]).sum() == 1:
+            tag_flag = True
+            tag_key = tag_df[tag_df["tag"].isin([tag_key])].loc[:, "tag"].iloc[-1]
+            # キーワードに完全一致したタグを含む行を残し、
+            # キーワードに部分一致しているその他のタグを含む行を削除する
+            alt_df = tag_df.copy()
+            alt_df = alt_df[~alt_df["tag"].isin([tag_key])]
+            for row in alt_df.iterrows():
+                main_df = main_df[~main_df["tag"].str.contains(row[1].iloc[-1])]
+        elif tag_df["tag"].str.contains(tag_key).sum() == 1:
+            tag_flag = True
+            tag_key = tag_df[tag_df["tag"].str.contains(tag_key)].loc[:, "tag"].iloc[-1]
+            main_df = main_df[main_df["tag"].str.contains(tag_key)]
         main_df = main_df[main_df["tag"].str.contains(tag_key)]
-    # タグの検索結果がユニークな場合、フラッグをTrueに
-    tag_flag = tag_key and tag_df["tag"].str.contains(tag_key).sum() == 1
 
     # 公開日
     if limited_flag:
@@ -154,18 +205,10 @@ if search_btn:
 
     # 四種のフラグのいずれかがTrueな場合、「平均ダウンロード数と作品数の推移」を表示
     if title_flag or circle_flag or va_flag or tag_flag:
-        # 「平均ダウンロード数と作品数の推移」を作成
+        # データフレーム「平均ダウンロード数と作品数の推移」を作成
         search_results_df = create.createSearchResultsDf(main_df)
-
-        # 検索結果がユニークなものは、キーをデータフレームから参照
-        if circle_flag:
-            circle_key = circle_df[circle_df["circle"].str.contains(circle_key)].loc[:, "circle"].iloc[-1]
-        if va_flag:
-            va_key = va_df[va_df["voice_actor"].str.contains(va_key)].loc[:, "voice_actor"].iloc[-1]
-        if tag_flag:
-            tag_key = tag_df[tag_df["tag"].str.contains(tag_key)].loc[:, "tag"].iloc[-1]
-        # グラフを表示
-        # 引数に検索フォームの内容を設置
+        # グラフ「平均ダウンロード数と作品数の推移」を表示
+        # 引数に、一意に定めたキーワードを設置
         show.showSearchResultsPlot(search_results_df, title=title_key, circle=circle_key, va=va_key, tag=tag_key)
         # データフレームを表示
         show.showDf("平均ダウンロード数と作品数の推移", search_results_df)
@@ -183,6 +226,11 @@ else:
         options=[30, 60, 90, 180, 365, 730, 1095]
     )
 
+    # スライダーで指定された期間にデータフレームを絞る
+    period = (datetime.datetime.now() - timedelta(days=period_slider)).date()
+    main_df = main_df[main_df["sales_date"] >= period]
+    # ダウンロード数順に並び替え
+    main_df = main_df.sort_values("downloads", ascending=False)
     # 「声優別平均ダウンロード数TOP20」を作成
     top20 = create.createInitialDf(main_df, ps=period_slider)
 
