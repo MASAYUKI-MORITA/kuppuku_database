@@ -115,72 +115,63 @@ if search_btn:
 
     # サークル
     # ・サークルのデータフレームにキーワードと完全一致したものがある
-    # ・キーワード検索の結果がユニークである
+    # ・サークルのデータフレームにキーワードと部分一致したものがひとつのみある
     # 上記の場合、「circle_flag」を「True」に
-    # また、キーワードを一意に定める（完全一致の方を優先）
+    # また、キーワードを上記の検索結果のものとする（完全一致の方を優先）
     circle_flag = False
     if circle_key:
         if circle_df["circle"].isin([circle_key]).sum() == 1:
             circle_flag = True
             circle_key = circle_df[circle_df["circle"].isin([circle_key])].loc[:, "circle"].iloc[-1]
-            # キーワードに完全一致したサークルを含む行を残し、
-            # キーワードに部分一致しているその他のサークルを含む行を削除する
-            main_df = main_df[main_df["circle"].str.contains(circle_key)]
-            alt_df = circle_df.copy()
-            alt_df = alt_df[~alt_df["circle"].isin([circle_key])]
-            for row in alt_df.iterrows():
-                main_df = main_df[~main_df["circle"].str.contains(row[1].iloc[-1])]
+            main_df = main_df[main_df["circle"].str.match(f"(.*,|^){circle_key}(,.*|$)")]
         elif circle_df["circle"].str.contains(circle_key).sum() == 1:
             circle_flag = True
             circle_key = circle_df[circle_df["circle"].str.contains(circle_key)].loc[:, "circle"].iloc[-1]
+            main_df = main_df[main_df["circle"].str.match(f"(.*,|^){circle_key}(,.*|$)")]
+        else:
             main_df = main_df[main_df["circle"].str.contains(circle_key)]
-        main_df = main_df[main_df["circle"].str.contains(circle_key)]
 
     # 声優
-    # ・サークルのデータフレームにキーワードと完全一致したものがある
-    # ・キーワード検索の結果がユニークである
+    # ・声優のデータフレームにキーワードと完全一致したものがある
+    # ・声優のデータフレームにキーワードと部分一致したものがひとつのみある
     # 上記の場合、「va_flag」を「True」に
-    # また、キーワードを一意に定める（完全一致の方を優先）
+    # また、キーワードを上記の検索結果のものとする（完全一致の方を優先）
     va_flag = False
     if va_key:
+        # 完全一致
         if va_df["voice_actor"].isin([va_key]).sum() == 1:
             va_flag = True
             va_key = va_df[va_df["voice_actor"].isin([va_key])].loc[:, "voice_actor"].iloc[-1]
-            # キーワードに完全一致した声優を含む行を残し、
-            # キーワードに部分一致しているその他の声優を含む行を削除する
-            main_df = main_df[main_df["voice_actor"].str.contains(va_key)]
-            alt_df = va_df.copy()
-            alt_df = alt_df[~alt_df["voice_actor"].isin([va_key])]
-            for row in alt_df.iterrows():
-                main_df = main_df[~main_df["voice_actor"].str.contains(row[1].iloc[-1])]
+            main_df = main_df[main_df["voice_actor"].str.match(f"(.*,|^){va_key}(,.*|$)")]
+        # 部分一致で検索結果がユニーク
         elif va_df["voice_actor"].str.contains(va_key).sum() == 1:
             va_flag = True
             va_key = va_df[va_df["voice_actor"].str.contains(va_key)].loc[:, "voice_actor"].iloc[-1]
+            main_df = main_df[main_df["voice_actor"].str.match(f"(.*,|^){va_key}(,.*|$)")]
+        # 検索結果が複数あるいは検索結果なし
+        else:
             main_df = main_df[main_df["voice_actor"].str.contains(va_key)]
-        main_df = main_df[main_df["voice_actor"].str.contains(va_key)]
 
     # タグ
-    # ・サークルのデータフレームにキーワードと完全一致したものがある
-    # ・キーワード検索の結果がユニークである
+    # ・タグのデータフレームにキーワードと完全一致したものがある
+    # ・タグのデータフレームにキーワードと部分一致したものがひとつのみある
     # 上記の場合、「tag_flag」を「True」に
-    # また、キーワードを一意に定める（完全一致の方を優先）
+    # また、キーワードを上記の検索結果のものとする（完全一致の方を優先）
     tag_flag = False
     if tag_key:
+        # 完全一致
         if tag_df["tag"].isin([tag_key]).sum() == 1:
             tag_flag = True
             tag_key = tag_df[tag_df["tag"].isin([tag_key])].loc[:, "tag"].iloc[-1]
-            # キーワードに完全一致したタグを含む行を残し、
-            # キーワードに部分一致しているその他のタグを含む行を削除する
-            main_df = main_df[main_df["tag"].str.contains(tag_key)]
-            alt_df = tag_df.copy()
-            alt_df = alt_df[~alt_df["tag"].isin([tag_key])]
-            for row in alt_df.iterrows():
-                main_df = main_df[~main_df["tag"].str.contains(row[1].iloc[-1])]
+            main_df = main_df[main_df["tag"].str.match(f"(.*,|^){tag_key}(,.*|$)")]
+        # 部分一致で検索結果がユニーク
         elif tag_df["tag"].str.contains(tag_key).sum() == 1:
             tag_flag = True
             tag_key = tag_df[tag_df["tag"].str.contains(tag_key)].loc[:, "tag"].iloc[-1]
+            main_df = main_df[main_df["tag"].str.match(f"(.*,|^){tag_key}(,.*|$)")]
+        # 検索結果が複数あるいは検索結果なし
+        else:
             main_df = main_df[main_df["tag"].str.contains(tag_key)]
-        main_df = main_df[main_df["tag"].str.contains(tag_key)]
 
     # 公開日
     if limited_flag:
