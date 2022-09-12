@@ -201,19 +201,7 @@ if search_btn:
     search_results_df = create.createSearchResultsDf(main_df)
     # グラフ「平均ダウンロード数と作品数の推移」を表示
     # 引数に、一意に定めたキーワードを設置
-    show.showSearchResultsPlot(\
-        search_results_df,\
-        title=title_key,\
-        circle=circle_key,\
-        va=va_key,\
-        tag=tag_key,\
-        sdfrom=sales_date_key_from,\
-        sdto=sales_date_key_to,\
-        price=price_key,\
-        pricerad=price_radio,\
-        downloads=downloads_key,\
-        downloadsrad=downloads_radio\
-    )
+    show.showSearchResultsPlot(search_results_df, title=title_key, circle=circle_key, va=va_key, tag=tag_key, sdfrom=sales_date_key_from, sdto=sales_date_key_to, price=price_key, pricerad=price_radio, downloads=downloads_key, downloadsrad=downloads_radio)
     # データフレームを表示
     show.showDf("平均ダウンロード数と作品数の推移", search_results_df)
 
