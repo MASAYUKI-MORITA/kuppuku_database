@@ -114,7 +114,7 @@ def showInitialPlot(df, ps=30):
     img = Image.open("initial_plot.png")
     st.image(img)
 
-def showSearchResultsPlot(df, title="", circle="", va="", tag=""):
+def showSearchResultsPlot(df, title="", circle="", va="", tag="", sdfrom="", sdto="", price="", pricerad="", downloads="", downloadsrad=""):
     # 一つ目のグラフを作成
     fig, ax1 = plt.subplots(figsize=(16, 9))
     # 一つ目を折れ線グラフに設定
@@ -151,7 +151,7 @@ def showSearchResultsPlot(df, title="", circle="", va="", tag=""):
             if i % (len(df.index) // 12) != 0:
                 tick.set_visible(False)
     # グラフの下に検索内容を表示
-    ax1.set_xlabel(f"作品タイトル:[ {title} ] サークル:[ {circle} ] 声優:[ {va} ] タグ:[ {tag} ]", labelpad=15, fontsize=20, fontfamily="IPAexGothic")
+    ax1.set_xlabel(f"作品タイトル:[ {title} ]   サークル:[ {circle} ]   声優:[ {va} ]   タグ:[ {tag} ]\n期間:[ {sdfrom} ～ {sdto} ]   価格:[ {price}{pricerad} ]   ダウンロード数:[ {downloads}{downloadsrad} ]", labelpad=15, fontsize=20, fontfamily="IPAexGothic")
     # x軸を左右反転
     ax2.invert_xaxis()
     # グリッドを非表示

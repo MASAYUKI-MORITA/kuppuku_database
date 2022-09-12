@@ -2,6 +2,7 @@ from datetime import datetime as dt, timedelta
 import create
 import datetime
 import pandas as pd
+import re
 import show
 import streamlit as st
 
@@ -66,10 +67,8 @@ if tag_key:
 
 # 公開日入力フォーム
 # 2000年1月1日～今日
-limited_flag = st.sidebar.checkbox("期間指定")
-if limited_flag:
-    sales_date_key_from = st.sidebar.date_input("公開日", datetime.date(2000, 1, 1), max_value=(datetime.date.today()))
-    sales_date_key_to = st.sidebar.date_input("～")
+sales_date_key_from = st.sidebar.date_input("公開日", datetime.date(2000, 1, 1), max_value=(datetime.date.today()))
+sales_date_key_to = st.sidebar.date_input("～")
 
 # 価格入力フォーム
 # 以上or以下or一致ラジオボタン
@@ -120,14 +119,17 @@ if search_btn:
     # また、キーワードを上記の検索結果のものとする（完全一致の方を優先）
     circle_flag = False
     if circle_key:
+        # 完全一致
         if circle_df["circle"].isin([circle_key]).sum() == 1:
             circle_flag = True
             circle_key = circle_df[circle_df["circle"].isin([circle_key])].loc[:, "circle"].iloc[-1]
             main_df = main_df[main_df["circle"].str.match(f"(.*,|^){circle_key}(,.*|$)")]
+        # 部分一致で検索結果がユニーク
         elif circle_df["circle"].str.contains(circle_key).sum() == 1:
             circle_flag = True
             circle_key = circle_df[circle_df["circle"].str.contains(circle_key)].loc[:, "circle"].iloc[-1]
             main_df = main_df[main_df["circle"].str.match(f"(.*,|^){circle_key}(,.*|$)")]
+        # 検索結果が複数あるいは検索結果なし
         else:
             main_df = main_df[main_df["circle"].str.contains(circle_key)]
 
@@ -174,8 +176,7 @@ if search_btn:
             main_df = main_df[main_df["tag"].str.contains(tag_key)]
 
     # 公開日
-    if limited_flag:
-        main_df = main_df[(main_df["sales_date"] >= sales_date_key_from) & (main_df["sales_date"] <= sales_date_key_to)]
+    main_df = main_df[(main_df["sales_date"] >= sales_date_key_from) & (main_df["sales_date"] <= sales_date_key_to)]
 
     # 価格
     if price_radio == "以上":
@@ -196,15 +197,25 @@ if search_btn:
     # 並び順
     main_df = main_df.sort_values(sort_dict[sort_key], ascending=da_dict[desc_or_asc])
 
-    # 四種のフラグのいずれかがTrueな場合、「平均ダウンロード数と作品数の推移」を表示
-    if title_flag or circle_flag or va_flag or tag_flag:
-        # データフレーム「平均ダウンロード数と作品数の推移」を作成
-        search_results_df = create.createSearchResultsDf(main_df)
-        # グラフ「平均ダウンロード数と作品数の推移」を表示
-        # 引数に、一意に定めたキーワードを設置
-        show.showSearchResultsPlot(search_results_df, title=title_key, circle=circle_key, va=va_key, tag=tag_key)
-        # データフレームを表示
-        show.showDf("平均ダウンロード数と作品数の推移", search_results_df)
+    # データフレーム「平均ダウンロード数と作品数の推移」を作成
+    search_results_df = create.createSearchResultsDf(main_df)
+    # グラフ「平均ダウンロード数と作品数の推移」を表示
+    # 引数に、一意に定めたキーワードを設置
+    show.showSearchResultsPlot(
+        search_results_df,
+        title=title_key,
+        circle=circle_key,
+        va=va_key,
+        tag=tag_key,
+        sdfrom=sales_date_key_from,
+        sdto=sales_date_key_to,
+        price=price_key,
+        pricerad=price_radio,
+        downloads=downloads_key,
+        downloadsrad=downloads_radio
+    )
+    # データフレームを表示
+    show.showDf("平均ダウンロード数と作品数の推移", search_results_df)
 
     # 検索結果をデータフレームで表示
     show.showDf("検索結果", main_df)
