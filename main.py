@@ -1,7 +1,9 @@
+from copy import copy
 from datetime import datetime as dt, timedelta
 import create
 import datetime
 import pandas as pd
+import re
 import show
 import streamlit as st
 
@@ -44,25 +46,34 @@ title_key = st.sidebar.text_input("作品タイトル")
 # 検索時、サークルのデータフレームを表示
 circle_key = st.sidebar.text_input("サークル")
 if circle_key:
-    circle_df = create.createSidebarDf(pd.read_csv(circle_path), circle_key, "circle")
-    if len(circle_df.index) > 0:
-        st.sidebar.dataframe(show.renameColumn(circle_df), height=160)
+    if not re.search("[\(\)\*\+\?\\\[]", circle_key):
+        circle_df = create.createSidebarDf(pd.read_csv(circle_path), circle_key)
+        if len(circle_df.index) > 0:
+            st.sidebar.dataframe(show.renameColumn(circle_df), height=160)
+    else:
+        st.sidebar.text("「　()*+?\[　」これらの文字を検索フォームに入力しないでください。")
 
 # 声優入力フォーム
 # 検索時、声優のデータフレームを表示
 va_key = st.sidebar.text_input("声優")
 if va_key:
-    va_df = create.createSidebarDf(pd.read_csv(va_path), va_key, "voice_actor")
-    if len(va_df.index) > 0:
-        st.sidebar.dataframe(show.renameColumn(va_df), height=160)
+    if not re.search("[\(\)\*\+\?\\\[]", va_key):
+        va_df = create.createSidebarDf(pd.read_csv(va_path), va_key)
+        if len(va_df.index) > 0:
+            st.sidebar.dataframe(show.renameColumn(va_df), height=160)
+    else:
+        st.sidebar.text("「　()*+?\[　」これらの文字を検索フォームに入力しないでください。")
 
 # タグ入力フォーム
 # 検索時、タグのデータフレームを表示
 tag_key = st.sidebar.text_input("タグ")
 if tag_key:
-    tag_df = create.createSidebarDf(pd.read_csv(tag_path), tag_key, "tag")
-    if len(tag_df.index) > 0:
-        st.sidebar.dataframe(show.renameColumn(tag_df), height=160)
+    if not re.search("[\(\)\*\+\?\\\[]", va_key):
+        tag_df = create.createSidebarDf(pd.read_csv(tag_path), tag_key)
+        if len(tag_df.index) > 0:
+            st.sidebar.dataframe(show.renameColumn(tag_df), height=160)
+    else:
+        st.sidebar.text("「　()*+?\[　」これらの文字を検索フォームに入力しないでください。")
 
 # 公開日入力フォーム
 # 2000年1月1日～今日
@@ -118,19 +129,23 @@ if search_btn:
     # また、キーワードを上記の検索結果のものとする（完全一致の方を優先）
     circle_flag = False
     if circle_key:
+        # 「　()*+?\[　」　サークルに含まれるこれらの記号を記号を正規表現で消したデータフレームを別で用意する
+        fs_main_df = pd.DataFrame(main_df.copy())
+        fs_main_df["circle"] = fs_main_df["circle"].str.replace("[\(\)\*\+\?\\\[]", "", regex=True)
+
         # 完全一致
-        if circle_df["circle"].isin([circle_key]).sum() == 1:
+        if circle_df["for_search"].isin([circle_key]).sum() == 1:
             circle_flag = True
-            circle_key = circle_df[circle_df["circle"].isin([circle_key])].loc[:, "circle"].iloc[-1]
-            main_df = main_df[main_df["circle"].str.match(f"(.*,|^){circle_key}(,.*|$)")]
+            circle_key = circle_df[circle_df["for_search"].isin([circle_key])].loc[:, "circle"].iloc[-1]
+            main_df = main_df[fs_main_df["circle"].str.match(f"(.*,|^){circle_key}(,.*|$)")]
         # 部分一致で検索結果がユニーク
-        elif circle_df["circle"].str.contains(circle_key).sum() == 1:
+        elif circle_df["for_search"].str.contains(circle_key).sum() == 1:
             circle_flag = True
             circle_key = circle_df[circle_df["circle"].str.contains(circle_key)].loc[:, "circle"].iloc[-1]
-            main_df = main_df[main_df["circle"].str.match(f"(.*,|^){circle_key}(,.*|$)")]
+            main_df = main_df[fs_main_df["circle"].str.match(f"(.*,|^){circle_key}(,.*|$)")]
         # 検索結果が複数あるいは検索結果なし
         else:
-            main_df = main_df[main_df["circle"].str.contains(circle_key)]
+            main_df = main_df[fs_main_df["circle"].str.contains(circle_key)]
 
     # 声優
     # ・声優のデータフレームにキーワードと完全一致したものがある
@@ -139,19 +154,23 @@ if search_btn:
     # また、キーワードを上記の検索結果のものとする（完全一致の方を優先）
     va_flag = False
     if va_key:
+        # 「　()*+?\[　」　声優に含まれるこれらの記号を記号を正規表現で消したデータフレームを別で用意する
+        fs_main_df = pd.DataFrame(main_df.copy())
+        fs_main_df["voice_actor"] = fs_main_df["voice_actor"].str.replace("[\(\)\*\+\?\\\[]", "", regex=True)
+
         # 完全一致
-        if va_df["voice_actor"].isin([va_key]).sum() == 1:
+        if va_df["for_search"].isin([va_key]).sum() == 1:
             va_flag = True
-            va_key = va_df[va_df["voice_actor"].isin([va_key])].loc[:, "voice_actor"].iloc[-1]
-            main_df = main_df[main_df["voice_actor"].str.match(f"(.*,|^){va_key}(,.*|$)")]
+            va_key = va_df[va_df["for_search"].isin([va_key])].loc[:, "voice_actor"].iloc[-1]
+            main_df = main_df[fs_main_df["voice_actor"].str.match(f"(.*,|^){va_key}(,.*|$)")]
         # 部分一致で検索結果がユニーク
-        elif va_df["voice_actor"].str.contains(va_key).sum() == 1:
+        elif va_df["for_search"].str.contains(va_key).sum() == 1:
             va_flag = True
-            va_key = va_df[va_df["voice_actor"].str.contains(va_key)].loc[:, "voice_actor"].iloc[-1]
-            main_df = main_df[main_df["voice_actor"].str.match(f"(.*,|^){va_key}(,.*|$)")]
+            va_key = va_df[va_df["for_search"].str.contains(va_key)].loc[:, "voice_actor"].iloc[-1]
+            main_df = main_df[fs_main_df["voice_actor"].str.match(f"(.*,|^){va_key}(,.*|$)")]
         # 検索結果が複数あるいは検索結果なし
         else:
-            main_df = main_df[main_df["voice_actor"].str.contains(va_key)]
+            main_df = main_df[fs_main_df["voice_actor"].str.contains(va_key)]
 
     # タグ
     # ・タグのデータフレームにキーワードと完全一致したものがある
@@ -160,19 +179,23 @@ if search_btn:
     # また、キーワードを上記の検索結果のものとする（完全一致の方を優先）
     tag_flag = False
     if tag_key:
+        # 「　()*+?\[　」　声優に含まれるこれらの記号を記号を正規表現で消したデータフレームを別で用意する
+        fs_main_df = pd.DataFrame(main_df.copy())
+        fs_main_df["tag"] = fs_main_df["tag"].str.replace("[\(\)\*\+\?\\\[]", "", regex=True)
+
         # 完全一致
-        if tag_df["tag"].isin([tag_key]).sum() == 1:
+        if tag_df["for_search"].isin([tag_key]).sum() == 1:
             tag_flag = True
-            tag_key = tag_df[tag_df["tag"].isin([tag_key])].loc[:, "tag"].iloc[-1]
-            main_df = main_df[main_df["tag"].str.match(f"(.*,|^){tag_key}(,.*|$)")]
+            tag_key = tag_df[tag_df["for_search"].isin([tag_key])].loc[:, "tag"].iloc[-1]
+            main_df = main_df[fs_main_df["tag"].str.match(f"(.*,|^){tag_key}(,.*|$)")]
         # 部分一致で検索結果がユニーク
-        elif tag_df["tag"].str.contains(tag_key).sum() == 1:
+        elif tag_df["for_search"].str.contains(tag_key).sum() == 1:
             tag_flag = True
-            tag_key = tag_df[tag_df["tag"].str.contains(tag_key)].loc[:, "tag"].iloc[-1]
-            main_df = main_df[main_df["tag"].str.match(f"(.*,|^){tag_key}(,.*|$)")]
+            tag_key = tag_df[tag_df["for_search"].str.contains(tag_key)].loc[:, "tag"].iloc[-1]
+            main_df = main_df[fs_main_df["tag"].str.match(f"(.*,|^){tag_key}(,.*|$)")]
         # 検索結果が複数あるいは検索結果なし
         else:
-            main_df = main_df[main_df["tag"].str.contains(tag_key)]
+            main_df = main_df[fs_main_df["tag"].str.contains(tag_key)]
 
     # 公開日
     main_df = main_df[(main_df["sales_date"] >= sales_date_key_from) & (main_df["sales_date"] <= sales_date_key_to)]

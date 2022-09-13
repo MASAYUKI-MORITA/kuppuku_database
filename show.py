@@ -21,7 +21,8 @@ def renameColumn(df):
         "appearances": "出演作品数",
         "mean_price": "平均価格",
         "mean_downloads": "平均ダウンロード数",
-        "total": "累計ダウンロード数"
+        "total": "累計ダウンロード数",
+        "for_search": "検索用"
     }
 
     df = pd.DataFrame(df)
@@ -57,14 +58,14 @@ def showDf(text, df):
     # サブヘッダーを表示
     st.subheader(text)
     # カラム名を編集する前にコピー
-    renamed_df = df.copy()
+    renamed_df = pd.DataFrame(df.copy())
     # データフレームを表示
     st.dataframe(renameColumn(renamed_df))
 
 # 概観表示
 def showDescribe(df):
     # カラム名を編集する前にコピー
-    renamed_df = df.copy()
+    renamed_df = pd.DataFrame(df.copy())
     # 概観を表示
     st.dataframe(renameIndex(renameColumn(renamed_df).describe()))
 
@@ -72,6 +73,7 @@ def showDescribe(df):
 
 # グラフ表示
 def showInitialPlot(df, ps=30):
+    df = pd.DataFrame(df)
     # 一つ目のグラフを作成
     fig, ax1 = plt.subplots(figsize=(16, 9))
     # 一つ目を棒グラフに設定
@@ -115,6 +117,7 @@ def showInitialPlot(df, ps=30):
     st.image(img)
 
 def showSearchResultsPlot(df, title="", circle="", va="", tag="", sdfrom="", sdto="", price="", pricerad="", downloads="", downloadsrad=""):
+    df = pd.DataFrame(df)
     # 一つ目のグラフを作成
     fig, ax1 = plt.subplots(figsize=(16, 9))
     # 一つ目を折れ線グラフに設定

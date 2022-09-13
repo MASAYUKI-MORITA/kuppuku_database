@@ -5,7 +5,7 @@ import pandas as pd
 # 最初に作成されるデータフレームを生成
 def createMainDf(df):
     # データフレームを編集する前にコピー
-    result = df.copy()
+    result = pd.DataFrame(df.copy())
     # カラムを並び替え
     result = result.reindex(
         ["title", "circle", "voice_actor", "tag", "sales_date", "price", "downloads"],
@@ -28,11 +28,11 @@ def createMainDf(df):
 
 # サイドバーのデータフレームを作成
 # （サークルor声優orタグ）
-def createSidebarDf(df, key, column):
+def createSidebarDf(df, key):
     # データフレームを編集する前にコピー
-    result = df.copy()
+    result = pd.DataFrame(df.copy())
     # フォームに入力された内容が含まれているセルを検索
-    result = result[result[column].astype(str).str.contains(key, case=False)]
+    result = result[result["for_search"].astype(str).str.contains(key, case=False)]
 
     return result
 
@@ -43,13 +43,12 @@ def createSidebarDf(df, key, column):
 # 作成するデータフレームは「声優別平均ダウンロード数TOP20」
 def createInitialDf(df, ps=30):
     # データフレームを編集する前にコピー
-    result = df.copy()
+    result = pd.DataFrame(df.copy())
     # データフレームをグループ化する前にコピー
     alt_df = result.copy()
     # 「voice_actor」基準でグループ化
     result = result.groupby(["voice_actor"]).mean()
     # 「downloads」カラムを「mean_downloads」（平均ダウンロード数）カラムに名称変更
-    result = pd.DataFrame(result)
     result = result.rename(columns={"downloads": "mean_downloads"})
     # 「price」カラムを「mean_price」（平均価格）カラムに名称変更
     result = result.rename(columns={"price": "mean_price"})
@@ -82,7 +81,7 @@ def createInitialDf(df, ps=30):
 # 作成するデータフレームは「月ごとの平均ダウンロード数および作品公開数の推移」
 def createSearchResultsDf(df):
     # データフレームを編集する前にコピー
-    alt_df = df.copy()
+    alt_df = pd.DataFrame(df.copy())
     # 「sales_date」カラムを「datetime型」に変換
     alt_df["sales_date"] = pd.to_datetime(alt_df["sales_date"])
     # 「sales_date」カラムをindexに配置
