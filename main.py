@@ -41,6 +41,9 @@ st.title("DLsite音声作品データベース")
 # サイドバー
 # 作品タイトル入力フォーム
 title_key = st.sidebar.text_input("作品タイトル")
+if title_key:
+    if re.search("[\(\)\*\+\?\\\[]", title_key):
+        st.sidebar.text("「　()*+?\[　」これらの文字を検索フォームに入力しないでください。")
 
 # サークル入力フォーム
 # 検索時、サークルのデータフレームを表示
